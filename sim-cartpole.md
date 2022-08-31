@@ -33,7 +33,7 @@ IJulia.clear_output();
 ```julia
 using Printf
 using Plots
-default(label="", grid=false, margin=10Plots.pt)
+default(label="", grid=false, margin=20Plots.pt)
 ```
 
 ```julia
@@ -129,8 +129,10 @@ const G = 9.81 # N or kg*m / s^2
 ```julia
 # Control
 function Fx(t)
-    if 1 < t <= 15
-        return 1
+    if 1 < t <= 2
+        return -1
+    elseif 11 < t <= 12
+        return +1
     else
         return 0
     end
@@ -188,15 +190,15 @@ end
 ```
 
 ```julia
-plot(time, z_[1,:], label="manual", ylabel="θ")
+plot(time, z_[1,:], xlabel="time", ylabel="θ")
 ```
 
 ```julia
-plot(z_[1,:], z_[3,:], label="manual", xlabel="θ", ylabel="dθ/dt")
+plot(z_[1,:], z_[3,:], xlabel="θ", ylabel="dθ/dt")
 ```
 
 ```julia
-plot(z_[2,:], z_[4,:], label="manual", xlabel="x", ylabel="dxdt")
+plot(z_[2,:], z_[4,:], xlabel="x", ylabel="dxdt")
 ```
 
 ```julia
@@ -209,16 +211,20 @@ anim = @animate for (i,t) in enumerate(time)
     u = Fx.(time[1:i])
     u = cat(u..., dims=2)
     
+    # Define layout
+    lay = @layout [grid(2,1, heights=[0.33, 0.66])]
+    
+    # Plot control
+    p1 = plot(time[1:i], u[1,:], color="red", xlims=[time[1], time[end]], ylims=[-2,2], grid=true, xlabel="time (s)", ylabel="torque", size=(1200,500))
+    
     # Plot line
-    p1 = plot([com1; com2], linewidth=10, alpha=0.5, label=@sprintf("t = %.1f", t), xlims=[-2,2], ylims=[-2,2], grid=true, color="black")
+    p2 = plot([com1; com2], linewidth=10, alpha=0.5, label=@sprintf("t = %.1f", t), xlims=[-10,10], ylims=[-2,2], grid=true, color="black", size=(1000,200))
     
     # Point masses
-    scatter!([com1[1]], [com1[2]], color="red")
-    scatter!([com2[1]], [com2[2]], color="blue")
+    scatter!([com1[1]], [com1[2]], color="red", xlabel="x-position")
+    scatter!([com2[1]], [com2[2]], color="blue", ylabel="y-position")
     
-    p2 = plot(time[1:i], u[1,:], color="red", xlims=[time[1], time[end]], ylims=[-1,2], grid=true, xlabel="time (s)", ylabel="torque")
-    
-    plot(p2, p1, layout=(1,2), size=(1200,500))
+    plot(p1, p2, layout=lay, size=(1000,400))
     
 end
 gif(anim, "figures/cartpole.gif", fps=100)
